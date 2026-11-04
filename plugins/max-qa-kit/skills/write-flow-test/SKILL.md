@@ -1,5 +1,6 @@
 ---
 name: write-flow-test
+argument-hint: "[app folder] [feature] [scenario ID]"
 description: Turn a scenario that /qa checked on a simulator or phone into a normal integration (flow) test in the app's own style, so it runs for free on every change. Use when the user asks to lock in a /qa result, convert an AI-checked scenario into a Patrol/integration test, or close a coverage gap with a real test.
 ---
 

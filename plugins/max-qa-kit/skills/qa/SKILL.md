@@ -1,5 +1,6 @@
 ---
 name: qa
+argument-hint: "[app folder] [feature] [scenario IDs] [on android]"
 description: AI QA for a Max Architecture (SG CLI) Flutter app on the iOS simulator or a connected Android phone/emulator — checks a feature's spec scenarios (US1-AS1 …) by driving the real app and judging each screen, then writes a report with screenshots and accessibility findings. Use when the user says /qa <app> <feature>, asks to QA/test a feature or spec scenarios on a simulator or phone, or wants AI-checked coverage.
 ---
 

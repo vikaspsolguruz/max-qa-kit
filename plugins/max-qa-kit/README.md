@@ -12,8 +12,8 @@ commits or keeps changes to the app.
 | | What it answers | Cost |
 |---|---|---|
 | `qa-kit coverage` | Which spec scenarios have a test at all? | free |
-| `/max-qa-kit:qa` | Does the screen match the spec's words? Accessibility (unlabeled buttons, tap areas under 48×48)? | ~$0.10–0.20 per scenario |
-| `/max-qa-kit:write-flow-test` | Turn a passed AI check into a normal flow test | one Claude session |
+| `/qa` (`/max-qa-kit:qa`) | Does the screen match the spec's words? Accessibility (unlabeled buttons, tap areas under 48×48)? | ~$0.10–0.20 per scenario |
+| `/write-flow-test` | Turn a passed AI check into a normal flow test | one Claude session |
 | `qa-kit triage` | Why did a test run fail, and what should the dev do next? | ~$0.0001 (~$0.06 if Claude is asked) |
 | `qa-kit smoke` | Does the kit start this app on this device? | free |
 
@@ -45,7 +45,9 @@ claude plugin install max-qa-kit@solguruz
 Updates: `claude plugin marketplace update solguruz`.
 
 The plugin puts `qa-kit` on the Bash PATH inside Claude Code and adds the skills
-`/max-qa-kit:qa` and `/max-qa-kit:write-flow-test`. Outside Claude Code run it
+`/max-qa-kit:qa` and `/max-qa-kit:write-flow-test`. For plain `/qa` and
+`/write-flow-test` in the `/` menu, run `qa-kit shortcuts` once (ask Claude to run it);
+`qa-kit shortcuts --remove` undoes it. Outside Claude Code run it
 by path: `~/.claude/plugins/…/max-qa-kit/bin/qa-kit` (`qa-kit where` prints it).
 
 ## Use
@@ -59,7 +61,7 @@ qa-kit smoke ~/code/my_app --platform android fresh relaunch
 qa-kit triage --log out.log --repo ~/code/my_app --message "what I intended"
 ```
 
-Or in Claude Code: `/max-qa-kit:qa ~/code/my_app find-customer`.
+Or in Claude Code: `/qa ~/code/my_app find-customer` (after `qa-kit shortcuts`; otherwise `/max-qa-kit:qa`).
 
 Results are written under `results/` in the folder you run from. If that folder is
 the app itself (Claude Code opened in the app), they go to
