@@ -43,16 +43,30 @@ Outside Claude Code, `qa-kit` is not on your PATH; run it by path:
 
 ## Jev key (optional, makes judging cheaper)
 
-The judge asks Jev (TypeSafe) first and Claude only when Jev is unsure. With no
-key, add `--judge claude` to runs (it works, it just costs more). To use Jev,
-put your own key in one of these places:
+The `/qa` judge asks Jev (TypeSafe) first and Claude only when Jev is unsure.
+Without a key `/qa` still works: add `--judge claude` to `qa-kit run` (it just
+costs more per scenario). `qa-kit triage` needs the key.
+
+**1. Get a key.** Log in (or sign up) at the TypeSafe console and create a key on
+the keys page: https://console.typesafe.ai/keys. A team can also share one key:
+whoever owns the team's TypeSafe account creates it and sends it privately (a
+password manager or DM, never the repo or a public channel).
+
+**2. Save it** in the kit's key file (recommended: Claude Code sessions always see it):
 
 ```bash
-mkdir -p ~/.qa-kit && echo "TYPESAFE_API_KEY=<your key>" > ~/.qa-kit/.env && chmod 600 ~/.qa-kit/.env
-# or: export TYPESAFE_API_KEY=<your key>
+mkdir -p ~/.qa-kit
+echo "TYPESAFE_API_KEY=<your key>" > ~/.qa-kit/.env
+chmod 600 ~/.qa-kit/.env
 ```
 
-Never commit the key.
+Or set it in your shell profile (`~/.zshrc`): `export TYPESAFE_API_KEY=<your key>`.
+The kit reads the environment variable first, then `~/.qa-kit/.env`
+(or `$QA_KIT_HOME/.env` if you set `QA_KIT_HOME`).
+
+**3. Check it:** `qa-kit doctor` should say `jev key  found`.
+
+Never commit the key or paste it into a chat, issue or screenshot.
 
 ## First use
 

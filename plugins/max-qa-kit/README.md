@@ -25,8 +25,9 @@ commits or keeps changes to the app.
 - `python3` (3.10+), `flutter`, `git`, and the `claude` CLI (plans, drives and judges).
 - The SG CLI installed (`~/.pub-cache/git/sg_cli-*`): setup compares the app with its
   `max` boilerplate (it still works without it, slightly less precisely).
-- Optional: a TypeSafe key for the Jev judge (`TYPESAFE_API_KEY`, in the environment
-  or in `~/.qa-kit/.env`, chmod 600). Without it use `--judge claude`.
+- Optional: a TypeSafe key for the Jev judge (get one at https://console.typesafe.ai/keys;
+  put `TYPESAFE_API_KEY=<key>` in `~/.qa-kit/.env` with chmod 600, or export it).
+  Without it use `--judge claude`. Setup steps: the repo README, "Jev key".
 
 Run `qa-kit doctor` to check.
 
