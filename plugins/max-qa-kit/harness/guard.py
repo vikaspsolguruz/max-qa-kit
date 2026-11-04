@@ -25,6 +25,13 @@ def main(argv):
     if "--" not in argv:
         raise SystemExit(__doc__)
     opts, cmd = argv[:argv.index("--")], argv[argv.index("--") + 1:]
+    i = 0
+    while i < len(opts):  # refuse anything else: a mistyped option must not be ignored silently
+        if opts[i] not in ("--app", "--out", "--put") or i + 1 >= len(opts):
+            raise SystemExit(f"unknown or incomplete option {opts[i]!r}\n{__doc__}")
+        if opts[i] == "--put" and "=" not in opts[i + 1]:
+            raise SystemExit(f"--put needs SRC=DEST, got {opts[i + 1]!r}")
+        i += 2
     app = os.path.abspath(os.path.expanduser(opts[opts.index("--app") + 1]))
     out = R.kit_state_out(app, opts[opts.index("--out") + 1])
     puts = [opts[i + 1].split("=", 1) for i, o in enumerate(opts) if o == "--put"]
@@ -33,7 +40,7 @@ def main(argv):
         raise SystemExit(f"REFUSED: an earlier run did not restore {app}; run run.py --restore-from first")
     before = R.checksum(app)
     manifest = R.take_backup(app, out)
-    placed, code = [], None
+    placed, code, made_dirs = [], None, []
     for sig in (signal.SIGTERM, signal.SIGHUP):
         signal.signal(sig, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     try:
@@ -41,6 +48,10 @@ def main(argv):
             target = os.path.join(app, dest)
             if os.path.exists(target):
                 raise SystemExit(f"REFUSED: {dest} already exists in the app")
+            d = os.path.dirname(target)
+            while not os.path.isdir(d):  # remember folders we create, to remove them after
+                made_dirs.append(d)
+                d = os.path.dirname(d)
             os.makedirs(os.path.dirname(target), exist_ok=True)
             shutil.copy(os.path.expanduser(src), target)
             placed.append(target)
@@ -53,6 +64,9 @@ def main(argv):
         for t in placed:
             if os.path.exists(t):
                 os.remove(t)
+        for d in made_dirs:  # deepest first; only if still empty
+            if os.path.isdir(d) and not os.listdir(d):
+                os.rmdir(d)
         restored, failed = R.restore_backup(manifest)
         known = {e["path"] for e in manifest["entries"]}
         changed = [f for f in R.status_paths(app) if f not in known]
