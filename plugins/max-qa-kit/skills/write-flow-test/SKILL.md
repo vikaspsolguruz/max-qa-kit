@@ -45,5 +45,8 @@ own repo: `kit/bin/qa-kit`).
      `-- sh -c "sed -i '' 's/old/new/' lib/x.dart && flutter test …"` → must
      fail with a message that names the problem;
    - `guard.json` must say `"app_unchanged": true` both times.
+   - A tool missing (`adb`, a simulator, a Gradle download failing)? Use
+     `qa-kit get <tool>` exactly as the `/qa` skill's "Missing tools" table says
+     (official sources only).
 5. **Hand over** the test file (kept in `results/flowtests/`) and the
    pass/fail proof. Adding it to the app's repo is the team's call.

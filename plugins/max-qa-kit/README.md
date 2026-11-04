@@ -29,7 +29,11 @@ commits or keeps changes to the app.
   put `TYPESAFE_API_KEY=<key>` in `~/.qa-kit/.env` with chmod 600, or export it).
   Without it use `--judge claude`. Setup steps: the repo README, "Jev key".
 
-Run `qa-kit doctor` to check.
+Run `qa-kit doctor` to check. Missing `adb`, an iPhone simulator, or a Gradle download
+that keeps failing? `qa-kit get adb`, `qa-kit get ios-simulator`, `qa-kit get gradle <app>`
+fetch them from the official source (Google, Apple, gradle.org) and verify them; for
+Xcode, Flutter, git or python it prints the official installer. The `/qa` skill does this
+by itself when a tool is missing.
 
 ## Install
 

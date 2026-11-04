@@ -21,6 +21,13 @@ You need:
 
 You need iOS or Android, not both.
 
+Missing a piece later? After installing, `qa-kit doctor` shows what is missing and
+the fix. `qa-kit get adb`, `qa-kit get ios-simulator` and `qa-kit get gradle <app>`
+download from the official source (Google, Apple, gradle.org) and verify the
+download. In Claude Code the `/max-qa-kit:qa` skill does this by itself when it
+hits a missing tool. Xcode and Flutter need their own installers; `qa-kit get xcode`
+and `qa-kit get flutter` print the official way.
+
 ## Install
 
 ```bash

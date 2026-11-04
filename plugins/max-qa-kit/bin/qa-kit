@@ -2,6 +2,8 @@
 """qa-kit — AI QA kit for Max Architecture (SG CLI) Flutter apps with spec folders.
 
   qa-kit doctor                          what is installed / missing (flutter, adb, xcrun, claude, Jev key)
+  qa-kit get <adb|gradle <app>|ios-simulator|xcode|flutter|git|python|claude>
+                                         get a missing tool from its official source (verified)
   qa-kit where                           where profiles, the Jev key and history are kept
   qa-kit check <app>                     is it a Max app the kit can use? (exit 0 = yes)
   qa-kit setup <app> [--device UDID] [--android-device SERIAL]
@@ -42,23 +44,29 @@ def run(script, args):
 def doctor():
     sys.path.insert(0, KIT)
     import state
+    import tools
     rows = []
     for tool, why in (("flutter", "build and run the app"), ("git", "back up / restore the app"),
                       ("claude", "plan, drive and judge (/qa)"), ("adb", "Android devices"),
                       ("xcrun", "iOS simulator (macOS only)")):
-        rows.append((tool, shutil.which(tool) or "MISSING", why))
+        rows.append((tool, tools.which(tool) or "MISSING", why))
     try:
         state.jev_key()
         key = "found"
     except SystemExit:
-        key = "missing (Jev judge off: use --judge claude, or set TYPESAFE_API_KEY)"
+        key = ("missing (/qa: use --judge claude; triage needs it) — get one at "
+               "https://console.typesafe.ai/keys, save as TYPESAFE_API_KEY=… in " + state.env_file())
     for name, where, why in rows:
-        print(f"  {name:8} {where:60} {why}")
+        fix = f"   -> fix: {tools.fix_hint(name)}" if where == "MISSING" else ""
+        print(f"  {name:8} {where:60} {why}{fix}")
     print(f"  {'jev key':8} {key}")
     print(f"  python   {sys.version.split()[0]} ({sys.executable})")
-    if shutil.which("adb"):
-        out = subprocess.run(["adb", "devices"], capture_output=True, text=True).stdout
+    if tools.adb_path():
+        out = subprocess.run([tools.adb(), "devices"], capture_output=True, text=True).stdout
         print("  android  " + (", ".join(l.replace("\t", " ") for l in out.splitlines()[1:] if l.strip()) or "no device"))
+    if tools.which("xcrun"):
+        print("  (no iPhone simulator? `qa-kit get ios-simulator`; first Android build fails to download "
+              "Gradle? `qa-kit get gradle <app>`)")
     return 0 if all(r[1] != "MISSING" for r in rows[:3]) else 1
 
 
@@ -124,7 +132,7 @@ def main(argv):
         print(__doc__)
         return 0
     cmd, args = argv[0], argv[1:]
-    if (not args and cmd not in ("doctor", "where")) or any(x in ("-h", "--help") for x in args[:1]):
+    if (not args and cmd not in ("doctor", "where", "get")) or any(x in ("-h", "--help") for x in args[:1]):
         if cmd == "triage":
             return run(SCRIPTS[cmd], ["--help"])
         lines = [l for l in __doc__.splitlines() if l.strip().startswith(f"qa-kit {cmd}")]
@@ -151,6 +159,10 @@ def main(argv):
         return smoke(args)
     if cmd == "doctor":
         return doctor()
+    if cmd == "get":
+        sys.path.insert(0, KIT)
+        import tools
+        return tools.main(args)
     if cmd == "where":
         return where()
     print(f"unknown command {cmd!r}\n{__doc__}")

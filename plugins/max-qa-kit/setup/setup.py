@@ -22,6 +22,7 @@ sys.path.insert(0, HERE)
 import check_max  # noqa: E402
 sys.path.insert(0, KIT)
 import state as kit_state  # noqa: E402
+import tools as kit_tools  # noqa: E402
 import scan  # noqa: E402
 
 PLIST_SERVICE = {  # Info.plist usage key -> name (simctl privacy service where one exists)
@@ -239,8 +240,8 @@ def android_build_problems(app):
 
 
 def adb_devices():
-    out = subprocess.run(["adb", "devices", "-l"], capture_output=True, text=True).stdout \
-        if shutil.which("adb") else ""
+    out = subprocess.run([kit_tools.adb(), "devices", "-l"], capture_output=True, text=True).stdout \
+        if kit_tools.adb_path() else ""
     devs = []
     for line in out.splitlines()[1:]:
         parts = line.split()
@@ -251,7 +252,7 @@ def adb_devices():
 
 
 def adb_prop(serial, prop):
-    return subprocess.run(["adb", "-s", serial, "shell", "getprop", prop],
+    return subprocess.run([kit_tools.adb(), "-s", serial, "shell", "getprop", prop],
                           capture_output=True, text=True, timeout=10).stdout.strip()
 
 

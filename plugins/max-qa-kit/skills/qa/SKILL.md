@@ -13,7 +13,8 @@ kit's command (on PATH while this plugin is enabled; in the kit's own repo it is
 ## Steps
 
 0. **Set up the app (first time; `plan` and `run` refresh it afterwards).**
-   `qa-kit doctor` once per machine (flutter, git, claude, adb/xcrun, Jev key).
+   `qa-kit doctor` once per machine (flutter, git, claude, adb/xcrun, Jev key); fix
+   anything MISSING as the "Missing tools" table below says.
    `qa-kit setup <app>` checks it is a Max app (exit 1 says what is missing) and
    writes its profile (`qa-kit where` shows where): start modes, fake-data switches,
    the team's test helpers, demo data, screens that open directly, iOS and Android
@@ -51,6 +52,24 @@ kit's command (on PATH while this plugin is enabled; in the kit's own repo it is
    `qa-kit coverage <app> results/coverage/<app name> --qa-reports results/qa`.
 
 No-AI check that the kit works on an app/device: `qa-kit smoke <app> [--platform android] [fresh relaunch route:<name> …]`.
+
+## Missing tools — get them, from official sources only
+
+When `qa-kit doctor` (or a failing run) shows a tool MISSING, fix it right there,
+then continue the task:
+
+| Missing | Do | Source |
+|---|---|---|
+| `adb` | `qa-kit get adb` | Google (sdkmanager, or dl.google.com platform-tools) |
+| Gradle download fails on the first Android build ("Gradle threw an error while downloading") | `qa-kit get gradle <app>`, then run again | services.gradle.org, sha256-checked |
+| no iPhone simulator | `qa-kit get ios-simulator` | creates one from the installed iOS runtime |
+| no iOS runtime | ask the user first (several GB), then `qa-kit get ios-simulator --download-runtime` | Apple's `xcodebuild -downloadPlatform iOS` |
+| `xcrun` (Xcode), `flutter`, `git`, `python3`, `claude` | `qa-kit get <name>` prints the official way; tell the user — these need their own installer or an App Store download | Apple / flutter.dev / python.org |
+
+Say in one line what you are installing and from where before you run it. Never
+install from other sources (unofficial mirrors, random Homebrew taps, copied
+binaries), never use `sudo` for these, and never change the app's own build files
+(Gradle version, plugins) to get around a missing tool.
 
 ## Rules
 

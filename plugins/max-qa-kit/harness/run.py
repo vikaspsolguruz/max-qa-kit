@@ -48,6 +48,8 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HARNESS_NAME = "zz_qa_harness_test.dart"
+sys.path.insert(0, os.path.dirname(HERE))
+import tools as kit_tools  # noqa: E402
 
 
 class Session:
@@ -138,7 +140,7 @@ def make_handler(sess):
 
 def screenshot(sess, png):
     if sess.platform == "android":
-        shot = subprocess.run(["adb", "-s", sess.device, "exec-out", "screencap", "-p"],
+        shot = subprocess.run([kit_tools.adb(), "-s", sess.device, "exec-out", "screencap", "-p"],
                               capture_output=True, timeout=30)
         ok = shot.returncode == 0 and shot.stdout.startswith(b"\x89PNG")
         if ok:
@@ -150,7 +152,7 @@ def screenshot(sess, png):
 
 
 def adb(serial, *a, timeout=60):
-    return subprocess.run(["adb", "-s", serial, *a], capture_output=True, text=True, timeout=timeout)
+    return subprocess.run([kit_tools.adb(), "-s", serial, *a], capture_output=True, text=True, timeout=timeout)
 
 
 def android_ready(serial, app_id, replace_installed):
@@ -181,7 +183,8 @@ ANDROID_FAILURES = {
                                           "uninstall it first",
     "INSTALL_FAILED_INSUFFICIENT_STORAGE": "the phone is out of storage",
     "Gradle threw an error while downloading": "Gradle could not download its build tools (a first "
-                                               "build of this Gradle version needs the network) — run again",
+                                               "build of this Gradle version needs the network) — run "
+                                               "`qa-kit get gradle <app>` (resumable, sha256-checked), then run again",
     "Could not find method jcenter()": "a plugin still uses jcenter(), which this Gradle version "
                                        "removed: the app does not build for Android (an app problem; "
                                        "setup lists the plugin)",
@@ -408,8 +411,8 @@ def main():
                     help="hard cap in seconds for build + driver; cleanup always runs")
     a = ap.parse_args()
     if a.platform is None:
-        ready = subprocess.run(["adb", "devices"], capture_output=True, text=True).stdout \
-            if shutil.which("adb") else ""
+        ready = subprocess.run([kit_tools.adb(), "devices"], capture_output=True, text=True).stdout \
+            if kit_tools.adb_path() else ""
         a.platform = "android" if f"{a.device}\tdevice" in ready else "ios"
     if a.build_timeout is None:
         a.build_timeout = 600 if a.platform == "android" else 300

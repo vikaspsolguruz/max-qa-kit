@@ -11,6 +11,7 @@ import sys
 KIT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, KIT)
 import state as kit_state  # noqa: E402
+import tools as kit_tools  # noqa: E402
 
 APPS = kit_state.apps_dir()
 SWITCH_HINT = {"bool": "true|false", "int": "a whole number", "double": "a number",
@@ -64,9 +65,9 @@ def app_path(p):
 
 def adb_ready():
     import shutil
-    if not shutil.which("adb"):
+    if not kit_tools.adb_path():
         return []
-    out = subprocess.run(["adb", "devices"], capture_output=True, text=True).stdout
+    out = subprocess.run([kit_tools.adb(), "devices"], capture_output=True, text=True).stdout
     return [l.split()[0] for l in out.splitlines()[1:] if len(l.split()) >= 2 and l.split()[1] == "device"]
 
 
