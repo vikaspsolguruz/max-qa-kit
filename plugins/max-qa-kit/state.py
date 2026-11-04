@@ -50,3 +50,28 @@ def jev_key(path=None):
                 return line.split("=", 1)[1].strip()
     raise SystemExit(f"TYPESAFE_API_KEY missing: set it in the environment or in {path} "
                      f"(chmod 600), or run the judge as --judge claude")
+
+
+def results_dir():
+    return os.path.join(home(), "results")
+
+
+def inside(path, folder):
+    path, folder = os.path.realpath(path), os.path.realpath(folder)
+    return path == folder or path.startswith(folder + os.sep)
+
+
+def out_dir(app, out, quiet=False):
+    """Where to write results. The app under test is never written to: an output folder
+    inside the app (e.g. `results/...` while Claude Code runs in the app's folder) is moved,
+    always to the same place, to <state>/results/<app folder>/<rest of the path>."""
+    o = os.path.abspath(os.path.expanduser(out))
+    if not inside(o, app):
+        return o
+    parts = os.path.relpath(os.path.realpath(o), os.path.realpath(app)).split(os.sep)
+    if parts and parts[0] == "results":
+        parts = parts[1:]
+    new = os.path.join(results_dir(), os.path.basename(os.path.realpath(app)), *[p for p in parts if p != "."])
+    if not quiet:
+        print(f"note: {out} is inside the app; results go to {new} (the app stays untouched)", flush=True)
+    return new

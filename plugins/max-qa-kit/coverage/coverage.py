@@ -278,8 +278,13 @@ def write_html(rows, unlinked, unpaired, path):
 
 def main():
     global APP, OUT, QA_DIR
-    APP, OUT = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2])
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    import state as kit_state
+    APP = os.path.abspath(os.path.expanduser(sys.argv[1]))
+    OUT = kit_state.out_dir(APP, sys.argv[2])  # never inside the app
     QA_DIR = sys.argv[sys.argv.index("--qa-reports") + 1] if "--qa-reports" in sys.argv else None
+    if QA_DIR:
+        QA_DIR = kit_state.out_dir(APP, QA_DIR, quiet=True)
     os.makedirs(OUT, exist_ok=True)
     specs = read_specs()
     tests, unpaired = read_tests(specs)

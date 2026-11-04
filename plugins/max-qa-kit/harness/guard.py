@@ -26,7 +26,7 @@ def main(argv):
         raise SystemExit(__doc__)
     opts, cmd = argv[:argv.index("--")], argv[argv.index("--") + 1:]
     app = os.path.abspath(os.path.expanduser(opts[opts.index("--app") + 1]))
-    out = os.path.abspath(os.path.expanduser(opts[opts.index("--out") + 1]))
+    out = R.kit_state_out(app, opts[opts.index("--out") + 1])
     puts = [opts[i + 1].split("=", 1) for i, o in enumerate(opts) if o == "--put"]
     os.makedirs(out, exist_ok=True)
     if os.path.exists(R.pointer_file(app)):

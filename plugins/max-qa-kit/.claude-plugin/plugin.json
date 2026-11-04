@@ -1,7 +1,7 @@
 {
   "name": "max-qa-kit",
   "displayName": "Max QA kit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "AI QA for Max Architecture (SG CLI) Flutter apps with spec folders: spec coverage map, /qa (drives the real app on the iOS simulator or an Android device and judges each screen with Jev + Claude), /write-flow-test, and test-failure triage. Ships the qa-kit command.",
   "author": { "name": "VikasPatel", "email": "vikasp@solguruz.com" },
   "keywords": ["flutter", "qa", "testing", "accessibility", "max-architecture", "sg-cli"]

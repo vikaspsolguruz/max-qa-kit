@@ -8,7 +8,10 @@ description: AI QA for a Max Architecture (SG CLI) Flutter app on the iOS simula
 Checks spec scenarios on the running app. Works on any Max Architecture app with
 spec folders (`specs/NNN-name/spec.md`). Every command below is `qa-kit`, the
 kit's command (on PATH while this plugin is enabled; in the kit's own repo it is
-`kit/bin/qa-kit`). Results go under `results/` in the current folder.
+`kit/bin/qa-kit`). Results go under `results/` in the current folder — except when
+that folder is the app itself (Claude Code opened in the app): then the kit writes
+them to `~/.qa-kit/results/<app folder>/…` and prints the path (the app is never
+written to). Use the printed path when you open screenshots and reports.
 
 ## Steps
 

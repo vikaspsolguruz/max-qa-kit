@@ -61,7 +61,10 @@ qa-kit triage --log out.log --repo ~/code/my_app --message "what I intended"
 
 Or in Claude Code: `/max-qa-kit:qa ~/code/my_app find-customer`.
 
-Results are written under `results/` in the folder you run from.
+Results are written under `results/` in the folder you run from. If that folder is
+the app itself (Claude Code opened in the app), they go to
+`~/.qa-kit/results/<app folder>/…` instead, so the app is never written to; the
+kit prints where.
 
 ## Where state lives
 

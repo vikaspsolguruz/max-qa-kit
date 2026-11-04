@@ -99,7 +99,7 @@ def smoke(args):
             i += 1
     prof = P.refresh(P.load(args[0]))
     plat, dev = P.device(prof, opts.get("--device"), opts.get("--platform"))
-    out = os.path.abspath(opts.get("--out") or os.path.join(
+    out = P.kit_state.out_dir(P.app_path(prof), opts.get("--out") or os.path.join(
         "results", "smoke", f"{prof['app']['package']}-{plat}"))
     os.makedirs(out, exist_ok=True)
     harness = os.path.join(out, "qa_harness.dart")

@@ -50,6 +50,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 HARNESS_NAME = "zz_qa_harness_test.dart"
 sys.path.insert(0, os.path.dirname(HERE))
 import tools as kit_tools  # noqa: E402
+import state as _kit_state  # noqa: E402
+
+
+def kit_state_out(app, out):
+    return _kit_state.out_dir(os.path.abspath(os.path.expanduser(app)), out)
 
 
 class Session:
@@ -419,6 +424,9 @@ def main():
     if not os.path.isfile(a.harness):
         sys.exit(f"REFUSED: harness {a.harness} not found")
     app, out = os.path.abspath(a.app), os.path.abspath(a.out)
+    if _kit_state.inside(out, app):
+        sys.exit(f"REFUSED: --out {out} is inside the app; the session would delete its own results "
+                 f"(the app is restored to how it was). Use a folder outside the app.")
     os.makedirs(out, exist_ok=True)
     target = os.path.join(app, "integration_test", HARNESS_NAME)
 

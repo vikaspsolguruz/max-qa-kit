@@ -83,7 +83,8 @@ qa-kit smoke ~/code/my_app            # free check that the kit can start the ap
 ```
 
 Then in Claude Code: `/max-qa-kit:qa ~/code/my_app <feature>`. Results land in
-`results/` in the folder you run from.
+`results/` in the folder you run from, or in `~/.qa-kit/results/<app>/` when you
+run Claude Code inside the app's own folder (the kit never writes into the app).
 
 Android: unlock the phone and allow USB debugging. Some brands (TECNO, Xiaomi)
 also need "Install via USB" in Developer options. If the app is already installed

@@ -91,6 +91,7 @@ def claude_json(system, prompt, budget):
 def plan(app_arg, feature, out, scenario_ids):
     prof = P.refresh(P.load(app_arg))
     app = P.app_path(prof)
+    out = P.kit_state.out_dir(app, out)
     coverage.APP = app
     specs = coverage.read_specs()
     key = next((k for k in specs if k == feature or k[4:] == feature), None)
@@ -146,6 +147,7 @@ def run_command(prof, out, judge_mode, max_session, defines=(), device=None, pla
 def run(app_arg, out, judge_mode, max_session, defines=(), device=None, platform=None,
         replace_installed=False, dry=False):
     prof = P.refresh(P.load(app_arg))
+    out = P.kit_state.out_dir(P.app_path(prof), out)
     os.makedirs(out, exist_ok=True)
     cmd, harness, problems = run_command(prof, out, judge_mode, max_session, defines, device,
                                          platform, replace_installed)
