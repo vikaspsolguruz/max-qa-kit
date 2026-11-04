@@ -21,14 +21,6 @@ You need:
 
 You need iOS or Android, not both.
 
-**Access:** this repo is private. Ask the owner to add you as a collaborator
-(repo → Settings → Collaborators), then make sure git can clone it:
-
-```bash
-gh auth login                      # or GitHub credentials in your keychain
-gh repo view vikaspsolguruz/max-qa-kit   # should print the repo, not "Could not resolve"
-```
-
 ## Install
 
 ```bash

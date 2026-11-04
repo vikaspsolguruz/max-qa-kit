@@ -37,9 +37,7 @@ claude plugin marketplace add https://github.com/vikaspsolguruz/max-qa-kit
 claude plugin install max-qa-kit@solguruz
 ```
 
-The repo is private: you need read access to it, with git able to clone it
-(`gh auth login`, or GitHub credentials in your keychain). Updates:
-`claude plugin marketplace update solguruz`.
+Updates: `claude plugin marketplace update solguruz`.
 
 The plugin puts `qa-kit` on the Bash PATH inside Claude Code and adds the skills
 `/max-qa-kit:qa` and `/max-qa-kit:write-flow-test`. Outside Claude Code run it
