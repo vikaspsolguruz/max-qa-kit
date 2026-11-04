@@ -1,0 +1,12 @@
+{
+  "name": "solguruz",
+  "description": "SolGuruz Claude Code plugins",
+  "owner": { "name": "Vikas Patel", "email": "vikasp@solguruz.com" },
+  "plugins": [
+    {
+      "name": "max-qa-kit",
+      "source": "./plugins/max-qa-kit",
+      "description": "AI QA for Max Architecture (SG CLI) Flutter apps: spec coverage, /qa on the iOS simulator or an Android device, flow tests, test-failure triage"
+    }
+  ]
+}

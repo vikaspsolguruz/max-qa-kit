@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""qa-kit — AI QA kit for Max Architecture (SG CLI) Flutter apps with spec folders.
+
+  qa-kit doctor                          what is installed / missing (flutter, adb, xcrun, claude, Jev key)
+  qa-kit where                           where profiles, the Jev key and history are kept
+  qa-kit check <app>                     is it a Max app the kit can use? (exit 0 = yes)
+  qa-kit setup <app> [--device UDID] [--android-device SERIAL]
+                                         read the app once; writes its profile (read-only on the app)
+  qa-kit coverage <app> <out_dir> [--qa-reports results/qa]
+                                         spec scenario <-> test map (coverage.html/json)
+  qa-kit plan <app> <feature> <out_dir> [--scenarios US1-AS1,US1-AS2]
+  qa-kit run  <app> <out_dir> [--judge jev+claude|claude] [--platform ios|android]
+              [--device UDID|SERIAL] [--replace-installed] [--max-session 480] [--dry-run]
+  qa-kit smoke <app> [--platform ios|android] [--device ID] [--out DIR] [mode ...]
+                                         no-AI check that the app starts in each mode (default fresh relaunch)
+  qa-kit step <action> ...               one step in a running session (needs QA_SERVER)
+  qa-kit guard --app <app> --out <dir> [--put SRC=DEST] -- <command ...>
+                                         run a command in the app; every file put back byte for byte
+  qa-kit restore <session_dir>           put an app back after a run was killed hard
+  qa-kit triage --log out.log [--repo <app>] [--message "..."] [--no-claude] [--json]
+                                         why did this test run fail, and what to do next
+
+<app> is the app folder (or, once set up, its package name).
+"""
+import os
+import shutil
+import subprocess
+import sys
+
+KIT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+PY = [sys.executable, "-I"]
+SCRIPTS = {
+    "check": "setup/check_max.py", "setup": "setup/setup.py", "coverage": "coverage/coverage.py",
+    "step": "harness/step.py", "guard": "harness/guard.py", "triage": "triage/triage.py",
+}
+
+
+def run(script, args):
+    return subprocess.run([*PY, os.path.join(KIT, script), *args]).returncode
+
+
+def doctor():
+    sys.path.insert(0, KIT)
+    import state
+    rows = []
+    for tool, why in (("flutter", "build and run the app"), ("git", "back up / restore the app"),
+                      ("claude", "plan, drive and judge (/qa)"), ("adb", "Android devices"),
+                      ("xcrun", "iOS simulator (macOS only)")):
+        rows.append((tool, shutil.which(tool) or "MISSING", why))
+    try:
+        state.jev_key()
+        key = "found"
+    except SystemExit:
+        key = "missing (Jev judge off: use --judge claude, or set TYPESAFE_API_KEY)"
+    for name, where, why in rows:
+        print(f"  {name:8} {where:60} {why}")
+    print(f"  {'jev key':8} {key}")
+    print(f"  python   {sys.version.split()[0]} ({sys.executable})")
+    if shutil.which("adb"):
+        out = subprocess.run(["adb", "devices"], capture_output=True, text=True).stdout
+        print("  android  " + (", ".join(l.replace("\t", " ") for l in out.splitlines()[1:] if l.strip()) or "no device"))
+    return 0 if all(r[1] != "MISSING" for r in rows[:3]) else 1
+
+
+def where():
+    sys.path.insert(0, KIT)
+    import state
+    print(f"kit:      {KIT}")
+    print(f"profiles: {state.apps_dir()}")
+    print(f"jev key:  $TYPESAFE_API_KEY or {state.env_file()}")
+    print(f"history:  {state.history_dir()}")
+    print(f"mode:     {'dev checkout' if state.dev_checkout() and not os.environ.get('QA_KIT_HOME') else 'installed / QA_KIT_HOME'}")
+    return 0
+
+
+def smoke(args):
+    sys.path.insert(0, os.path.join(KIT, "qa"))
+    sys.path.insert(0, os.path.join(KIT, "harness"))
+    import app_profile as P
+    import generate
+    opts, modes, i = {}, [], 1
+    while i < len(args):
+        if args[i] in ("--platform", "--device", "--out", "--max-session"):
+            opts[args[i]] = args[i + 1]
+            i += 2
+        elif args[i] == "--replace-installed":
+            opts[args[i]] = True
+            i += 1
+        else:
+            modes.append(args[i])
+            i += 1
+    prof = P.refresh(P.load(args[0]))
+    plat, dev = P.device(prof, opts.get("--device"), opts.get("--platform"))
+    out = os.path.abspath(opts.get("--out") or os.path.join(
+        "results", "smoke", f"{prof['app']['package']}-{plat}"))
+    os.makedirs(out, exist_ok=True)
+    harness = os.path.join(out, "qa_harness.dart")
+    open(harness, "w").write(generate.generate(prof))
+    grant, problems = P.grants(prof, plat)
+    for p in problems:
+        print(f"note — app setup: {p}")
+    driver = f"{sys.executable} -I {os.path.join(KIT, 'harness', 'smoke_driver.py')} {' '.join(modes)}"
+    code = subprocess.run([*PY, os.path.join(KIT, "harness", "run.py"), "--app", P.app_path(prof),
+                           "--device", dev, "--platform", plat, "--app-id", P.platform_id(prof, plat),
+                           "--harness", harness, "--out", os.path.join(out, "session"),
+                           "--driver", driver, "--max-session", opts.get("--max-session", "900"),
+                           *(["--grant", ",".join(grant)] if grant else []),
+                           *(["--replace-installed"] if opts.get("--replace-installed") else [])]).returncode
+    print(f"results: {out}/session (smoke.json, step_NNN.png, session.json)")
+    import json
+    sess = os.path.join(out, "session")
+    summary = json.load(open(os.path.join(sess, "session.json"))) if os.path.isfile(
+        os.path.join(sess, "session.json")) else {}
+    results = json.load(open(os.path.join(sess, "smoke.json"))) if os.path.isfile(
+        os.path.join(sess, "smoke.json")) else []
+    ok = (code == 0 and not summary.get("error") and summary.get("app_unchanged")
+          and results and all(r.get("status") == "ok" for r in results))
+    print("SMOKE OK" if ok else "SMOKE FAILED" + (f": {summary['error']}" if summary.get("error") else ""))
+    return code or (0 if ok else 1)
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        print(__doc__)
+        return 0
+    cmd, args = argv[0], argv[1:]
+    if (not args and cmd not in ("doctor", "where")) or any(x in ("-h", "--help") for x in args[:1]):
+        if cmd == "triage":
+            return run(SCRIPTS[cmd], ["--help"])
+        lines = [l for l in __doc__.splitlines() if l.strip().startswith(f"qa-kit {cmd}")]
+        if not lines:
+            print(f"unknown command {cmd!r}\n{__doc__}")
+            return 2
+        i = __doc__.splitlines().index(lines[0])
+        block = [lines[0]]
+        for l in __doc__.splitlines()[i + 1:]:
+            if l.startswith("  qa-kit ") or not l.strip():
+                break
+            block.append(l)
+        print("usage:\n" + "\n".join(block))
+        return 0 if args else 2
+    if cmd in SCRIPTS:
+        return run(SCRIPTS[cmd], args)
+    if cmd in ("plan", "run"):
+        return run("qa/qa.py", [cmd, *args])
+    if cmd == "restore":
+        return run("harness/run.py", ["--restore-from", *args])
+    if cmd == "smoke":
+        if not args:
+            raise SystemExit("usage: qa-kit smoke <app> [--platform ios|android] [mode ...]")
+        return smoke(args)
+    if cmd == "doctor":
+        return doctor()
+    if cmd == "where":
+        return where()
+    print(f"unknown command {cmd!r}\n{__doc__}")
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

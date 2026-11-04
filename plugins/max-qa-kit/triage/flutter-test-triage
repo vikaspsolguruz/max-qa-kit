@@ -1,0 +1,15 @@
+#!/bin/zsh
+# Run `flutter test` with any args; if it fails, explain why.
+# Usage (inside a Flutter repo):  flutter-test-triage [flutter test args]
+#   TRIAGE_MESSAGE="what I intended"  flutter-test-triage   # helps a lot
+log=$(mktemp)
+flutter test "$@" 2>&1 | tee "$log"
+code=${pipestatus[1]}
+if [ "$code" -ne 0 ]; then
+  echo "\n── triage ──────────────────────────────────────────"
+  extra=()
+  [ -n "$TRIAGE_MESSAGE" ] && extra=(--message "$TRIAGE_MESSAGE")
+  python3 -I "${0:A:h}/triage.py" --log "$log" "${extra[@]}"
+fi
+rm -f "$log"
+exit $code
